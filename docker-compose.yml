@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the full project directory for live code changes.
+      # Changes to Twig templates, PHP files, and config take effect immediately
+      # — no rebuild required (PHP's built-in server re-reads files on each request).
+      - .:/app
+      # Preserve the vendor/ directory installed inside the container.
+      # Without this, the host's empty vendor/ would shadow the container's.
+      - vendor_cache:/app/vendor
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      # A placeholder secret — sufficient for local review only.
+      # Never use this value outside a local development environment.
+      APP_SECRET: docker-local-secret-not-for-production
+      # SQLite database stored inside the container-accessible var/data/ directory.
+      # The %kernel.project_dir% placeholder is resolved by Symfony at runtime.
+      DATABASE_URL: "sqlite:///%kernel.project_dir%/var/data/app.db"
+      # Admin credentials created on first start.
+      # Override via a .env file or shell environment before running docker compose up.
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: secret1234
+
+volumes:
+  # Named volume for vendor/ so Composer packages are not re-downloaded
+  # on every container start when no dependency changes have been made.
+  vendor_cache:

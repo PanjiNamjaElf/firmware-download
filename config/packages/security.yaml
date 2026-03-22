@@ -1,0 +1,71 @@
+security:
+    # -------------------------------------------------------------------------
+    # Password hashing
+    # -------------------------------------------------------------------------
+    password_hashers:
+        App\Entity\AdminUser:
+            algorithm: bcrypt
+            cost: 12
+
+    # -------------------------------------------------------------------------
+    # User providers
+    # -------------------------------------------------------------------------
+    providers:
+        admin_users:
+            entity:
+                class: App\Entity\AdminUser
+                property: username
+
+    # -------------------------------------------------------------------------
+    # Firewalls
+    # -------------------------------------------------------------------------
+    firewalls:
+
+        # Symfony profiler and debug toolbar — always open in dev.
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # Public-facing routes: customer page and API endpoint.
+        # No authentication required — mirrors the legacy unauthenticated API.
+        public:
+            pattern: ^/(api|carplay)/
+            security: false
+
+        # Admin panel — protected by a standard login form.
+        admin:
+            pattern: ^/admin
+            lazy: true
+            provider: admin_users
+            form_login:
+                login_path: security_login
+                check_path: security_login
+                # After login, go to the EasyAdmin dashboard.
+                default_target_path: easyadmin
+                # After logout, go back to the login page.
+                always_use_default_target_path: false
+                # CSRF protection on the login form.
+                enable_csrf: true
+            logout:
+                path: security_logout
+                target: security_login
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800  # 7 days in seconds.
+                always_remember_me: false
+
+    # -------------------------------------------------------------------------
+    # Access control
+    # -------------------------------------------------------------------------
+    access_control:
+        # Login page is always public (otherwise admins could never log in).
+        - { path: ^/admin/login, roles: PUBLIC_ACCESS }
+        # All other /admin/* routes require the ROLE_ADMIN role.
+        - { path: ^/admin, roles: ROLE_ADMIN }
+
+when@test:
+    security:
+        password_hashers:
+            # Use plain-text hashing in tests for speed — never in production.
+            App\Entity\AdminUser:
+                algorithm: plaintext

@@ -1,0 +1,21 @@
+parameters:
+
+services:
+    # Default configuration for services in *this* file.
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # Makes classes in src/ available to be used as services.
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Explicitly bind kernel.project_dir to ImportFirmwareDataCommand so it can
+    # locate the bundled JSON file without relying on __DIR__ hacks.
+    App\Command\ImportFirmwareDataCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'

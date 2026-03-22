@@ -1,0 +1,51 @@
+monolog:
+    handlers:
+        # Console output for all environments (CLI commands).
+        console:
+            type: console
+            process_psr_3_messages: false
+            channels: ["!event", "!doctrine", "!console"]
+
+# ---- Development -------------------------------------------------------
+# Write every log line immediately — no buffering.
+# Easier to trace what happened even when no error occurs.
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+
+# ---- Production --------------------------------------------------------
+# Buffer all logs; only flush to disk when an ERROR or above is encountered.
+# 404 and 405 are excluded so normal "not found" requests don't spam the log.
+when@prod:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                buffer_size: 50
+
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+
+# ---- Test ---------------------------------------------------------------
+when@test:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug

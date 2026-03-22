@@ -1,0 +1,689 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Software Update — CarPlay / Android Auto MMI{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* ------------------------------------------------------------------ */
+        /* Layout                                                             */
+        /* ------------------------------------------------------------------ */
+
+        body {
+            font-family: 'Rubik', 'Segoe UI', sans-serif;
+            color: #212121;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1rem 4rem;
+        }
+
+        .content-card {
+            width: 100%;
+            max-width: 560px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem 2rem;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Header                                                             */
+        /* ------------------------------------------------------------------ */
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.25;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.05rem;
+            font-weight: 300;
+            color: #444;
+            margin-bottom: 0;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Form                                                               */
+        /* ------------------------------------------------------------------ */
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-text {
+            font-size: 0.82rem;
+            color: #6c757d;
+        }
+
+        .form-control:focus {
+            border-color: #1a1a2e;
+            box-shadow: 0 0 0 0.2rem rgba(26, 26, 46, 0.15);
+        }
+
+        .btn-check-update {
+            background-color: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 0.65rem 2rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            transition: background-color 0.15s ease;
+        }
+
+        .btn-check-update:hover {
+            background-color: #2d2d4e;
+            color: #fff;
+        }
+
+        .btn-check-update:disabled {
+            background-color: #9999aa;
+            cursor: not-allowed;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Result area                                                        */
+        /* ------------------------------------------------------------------ */
+
+        #result-area {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .result-box {
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .result-box.success {
+            background-color: #f0faf0;
+            border: 1.5px solid #52c41a;
+            color: #2d6a0a;
+        }
+
+        .result-box.error {
+            background-color: #fff2f0;
+            border: 1.5px solid #ff4d4f;
+            color: #a8071a;
+        }
+
+        .result-msg {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .download-links {
+            margin-top: 0.85rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background-color: #52c41a;
+            color: #fff;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            transition: background-color 0.15s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #389e0d;
+            color: #fff;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Spinner overlay on the form                                        */
+        /* ------------------------------------------------------------------ */
+
+        .form-loading-wrapper {
+            position: relative;
+        }
+
+        .form-loading-wrapper.is-loading {
+            pointer-events: none;
+        }
+
+        .form-loading-wrapper.is-loading::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        .form-loading-wrapper.is-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            margin: -1.25rem 0 0 -1.25rem;
+            border: 3px solid rgba(26, 26, 46, 0.15);
+            border-top-color: #1a1a2e;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+            z-index: 11;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Warning block                                                      */
+        /* ------------------------------------------------------------------ */
+
+        .warning-block {
+            background-color: #fffbe6;
+            border: 1.5px solid #ffe58f;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-size: 0.87rem;
+            color: #614700;
+            line-height: 1.6;
+            margin-top: 1.5rem;
+        }
+
+        .warning-block strong {
+            color: #ad4e00;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Modal                                                              */
+        /* ------------------------------------------------------------------ */
+
+        .modal-header {
+            background-color: #1a1a2e;
+        }
+
+        .modal-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Footer card                                                        */
+        /* ------------------------------------------------------------------ */
+
+        .footer-card {
+            width: 100%;
+            max-width: 560px;
+            margin-top: 1.25rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            padding: 1.25rem 2rem;
+        }
+
+        .footer-card p {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="page-wrapper">
+        {# ------------------------------------------------------------------ #}
+        {# Main content card                                                  #}
+        {# ------------------------------------------------------------------ #}
+        <div class="content-card">
+
+            {# Title #}
+            <div class="mb-4 text-center">
+                <p class="page-title">Update the software for your</p>
+                <p class="page-subtitle">CarPlay / Android Auto MMI</p>
+            </div>
+
+            {# ---------------------------------------------------------------- #}
+            {# Firmware check form                                              #}
+            {# All fields post to the API via fetch() in JS.                    #}
+            {# ---------------------------------------------------------------- #}
+            <div class="form-loading-wrapper" id="form-wrapper">
+                <form id="firmware-form" novalidate>
+
+                    {# System version #}
+                    <div class="mb-3">
+                        <label for="version" class="form-label">
+                            System Version <span class="text-danger">*</span>
+                        </label>
+                        <input
+                                type="text"
+                                id="version"
+                                name="version"
+                                class="form-control"
+                                placeholder="e.g. 3.3.7.mmipri.c"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                required
+                        >
+                        <div class="form-text">
+                            Enter the version shown in MMI Settings → System → System/firmware version.
+                            <a href="#" id="show-help-link" class="ms-1">Where do I find this?</a>
+                        </div>
+                        <div class="invalid-feedback">Please enter your system version.</div>
+                    </div>
+
+                    {# MCU version (optional) #}
+                    <div class="mb-3">
+                        <label for="mcuVersion" class="form-label">
+                            MCU Version <span class="text-muted fw-normal">(not required)</span>
+                        </label>
+                        <input
+                                type="text"
+                                id="mcuVersion"
+                                name="mcuVersion"
+                                class="form-control"
+                                placeholder="e.g. 1.0.0"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                disabled
+                        >
+                    </div>
+
+                    {# Hardware version #}
+                    <div class="mb-4">
+                        <label for="hwVersion" class="form-label">
+                            HW Version <span class="text-danger">*</span>
+                        </label>
+                        <input
+                                type="text"
+                                id="hwVersion"
+                                name="hwVersion"
+                                class="form-control"
+                                placeholder="e.g. CPAA_2023.01.15"
+                                autocomplete="off"
+                                autocorrect="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                required
+                        >
+                        <div class="form-text">
+                            Enter the HW version shown in MMI Settings → System → System/firmware version.
+                        </div>
+                        <div class="invalid-feedback">Please enter your HW version.</div>
+                    </div>
+
+                    {# Submit #}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-check-update" id="submit-btn">
+                            Check for Update
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            {# ---------------------------------------------------------------- #}
+            {# Result area — hidden until API responds.                         #}
+            {# State is driven entirely by JS — no page reload.                 #}
+            {# ---------------------------------------------------------------- #}
+            <div id="result-area" role="alert" aria-live="polite">
+
+                {# Success state: version found — either up to date or update available. #}
+                <div id="result-success" class="result-box success" style="display:none;">
+                    <p class="result-msg" id="result-msg-success"></p>
+                    <div class="download-links" id="download-links">
+                        {# ST download link — shown only when the API returns a non-empty `st` field. #}
+                        <a
+                                id="link-st"
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="download-btn"
+                                style="display:none;"
+                        >
+                            ST Version
+                        </a>
+                        {# GD download link — shown only when the API returns a non-empty `gd` field. #}
+                        <a
+                                id="link-gd"
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="download-btn"
+                                style="display:none;"
+                        >
+                            GD Version
+                        </a>
+                    </div>
+                </div>
+
+                {# Error state: validation failure, unknown HW, or version not found. #}
+                <div id="result-error" class="result-box error" style="display:none;">
+                    <p class="result-msg" id="result-msg-error"></p>
+                </div>
+
+            </div>
+
+            {# ---------------------------------------------------------------- #}
+            {# Warning block — always visible below the result area.            #}
+            {# ---------------------------------------------------------------- #}
+            <div class="warning-block">
+                <strong>⚠️ Warning</strong><br>
+                Entering an incorrect software number and uploading firmware intended for a
+                different MMI version will brick the MMI. In most cases this is reversible,
+                but only with the assistance of our support team.<br>
+                BimmerTech is not responsible for errors caused by uploading the incorrect version.
+                After this step, replacement under warranty cannot be considered.
+            </div>
+
+        </div>
+
+        {# ------------------------------------------------------------------ #}
+        {# Footer card                                                        #}
+        {# ------------------------------------------------------------------ #}
+        <div class="footer-card">
+            <a
+                    href="https://newshop.testshop1.bimmer-tech.net/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-outline-dark btn-sm mb-3"
+            >
+                ← Go back to the shop
+            </a>
+            <p>
+                BMW and MINI are registered trademarks of Bayerische Motoren Werke AG.
+                BimmerTech is not affiliated with BMW AG in any way, and is not authorised
+                by BMW AG to act as an official distributor or representative.
+            </p>
+        </div>
+
+    </div>
+
+    {# ------------------------------------------------------------------ #}
+    {# "Where do I find my version?" modal                                #}
+    {# ------------------------------------------------------------------ #}
+    <div
+            class="modal fade"
+            id="help-modal"
+            tabindex="-1"
+            aria-labelledby="help-modal-label"
+            aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <span class="text-white fw-semibold" id="help-modal-label">
+                        Where do I find my software version?
+                    </span>
+                    <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                    ></button>
+                </div>
+                <div class="modal-body p-0">
+                    {#
+                    Image shows the MMI settings screen with the version location highlighted.
+                    Place the image at public/images/mmi_software_version.jpg
+                    (copied from the legacy assets directory).
+                    #}
+                    <img
+                            src="/images/mmi_software_version.jpg"
+                            alt="Screenshot of the MMI settings screen showing where to find the software version number"
+                            class="modal-img"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        (function () {
+            'use strict';
+
+            // -----------------------------------------------------------------------
+            // Element references
+            // -----------------------------------------------------------------------
+
+            const form = document.getElementById('firmware-form');
+            const formWrapper = document.getElementById('form-wrapper');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultArea = document.getElementById('result-area');
+
+            const resultSuccess = document.getElementById('result-success');
+            const resultError = document.getElementById('result-error');
+            const resultMsgOk = document.getElementById('result-msg-success');
+            const resultMsgErr = document.getElementById('result-msg-error');
+            const downloadLinks = document.getElementById('download-links');
+            const linkSt = document.getElementById('link-st');
+            const linkGd = document.getElementById('link-gd');
+
+            const showHelpLink = document.getElementById('show-help-link');
+            const helpModal = new bootstrap.Modal(document.getElementById('help-modal'));
+
+            // -----------------------------------------------------------------------
+            // "Where do I find this?" modal trigger
+            // -----------------------------------------------------------------------
+
+            showHelpLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                helpModal.show();
+            });
+
+            // -----------------------------------------------------------------------
+            // Form submission
+            // -----------------------------------------------------------------------
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                // --- Client-side required-field validation (matches legacy behaviour) ---
+                // The legacy Vue form validated client-side with a "required" rule.
+                // We replicate this using the Bootstrap validation pattern.
+                // Note: the API also validates server-side — this is just UX sugar.
+                const versionInput = document.getElementById('version');
+                const hwVersionInput = document.getElementById('hwVersion');
+                const mcuVersionInput = document.getElementById('mcuVersion');
+
+                let valid = true;
+
+                if (!versionInput.value.trim()) {
+                    versionInput.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    versionInput.classList.remove('is-invalid');
+                }
+
+                if (!hwVersionInput.value.trim()) {
+                    hwVersionInput.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    hwVersionInput.classList.remove('is-invalid');
+                }
+
+                if (!valid) {
+                    return;
+                }
+
+                // --- Reset state ---
+                hideResult();
+                setLoading(true);
+
+                // --- Call the API ---
+                try {
+                    const response = await fetch('{{ path('api_carplay_software_version') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            version: versionInput.value.trim(),
+                            hwVersion: hwVersionInput.value.trim(),
+                            mcuVersion: mcuVersionInput.value.trim(),
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        showErrorMessage('Something went wrong. Please try again.');
+                        return;
+                    }
+
+                    const data = await response.json();
+                    handleApiResponse(data);
+
+                } catch (error) {
+                    // Network failure or unexpected error.
+                    showErrorMessage('Failed to fetch software details. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            // -----------------------------------------------------------------------
+            // API response handler
+            //
+            // The response shape has two variants (matching the legacy controller):
+            //
+            // Variant A — validation/identification error (no `versionExist` key):
+            //   { "msg": "Version is required" }
+            //   { "msg": "HW Version is required" }
+            //   { "msg": "There was a problem identifying your software. Contact us for help." }
+            //
+            // Variant B — version lookup result (always has `versionExist`):
+            //   { "versionExist": true,  "msg": "Your system is upto date!", "link": "", "st": "", "gd": "" }
+            //   { "versionExist": true,  "msg": "The latest version of software is v3.3.7 ", ... }
+            //   { "versionExist": false, "msg": "There was a problem identifying your software...", ... }
+            // -----------------------------------------------------------------------
+
+            function handleApiResponse (data) {
+                // Variant A: validation/identification short-circuit — only `msg` key present.
+                // Treat as an error (red box), matching the legacy Vue `else` branch.
+                if (typeof data.versionExist === 'undefined') {
+                    showErrorMessage(data.msg || 'An unexpected error occurred.');
+                    return;
+                }
+
+                if (data.versionExist) {
+                    // Version found — show the green success box.
+                    showSuccess(data.msg, data.st || '', data.gd || '');
+                } else {
+                    // Version not found or unrecognized — show the red error box.
+                    showErrorMessage(data.msg || 'An unexpected error occurred.');
+                }
+            }
+
+            // -----------------------------------------------------------------------
+            // Render helpers
+            // -----------------------------------------------------------------------
+
+            /**
+             * Shows the green success box.
+             *
+             * @param {string} msg    - The message from the API (e.g. "Your system is upto date!").
+             * @param {string} stUrl  - The ST version download URL, or empty string.
+             * @param {string} gdUrl  - The GD version download URL, or empty string.
+             */
+            function showSuccess (msg, stUrl, gdUrl) {
+                resultMsgOk.textContent = msg;
+
+                // ST link — shown only when the API returns a non-empty `st` value.
+                if (stUrl) {
+                    linkSt.href = stUrl;
+                    linkSt.style.display = 'inline-block';
+                } else {
+                    linkSt.style.display = 'none';
+                }
+
+                // GD link — shown only when the API returns a non-empty `gd` value.
+                if (gdUrl) {
+                    linkGd.href = gdUrl;
+                    linkGd.style.display = 'inline-block';
+                } else {
+                    linkGd.style.display = 'none';
+                }
+
+                // Hide download-links container entirely when on latest (no links at all).
+                downloadLinks.style.display = (stUrl || gdUrl) ? 'flex' : 'none';
+
+                resultSuccess.style.display = 'block';
+                resultError.style.display = 'none';
+                resultArea.style.display = 'block';
+
+                // Scroll result into view smoothly for mobile users.
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            /**
+             * Shows the red error box with the given message.
+             *
+             * @param {string} msg - The error message to display.
+             */
+            function showErrorMessage (msg) {
+                resultMsgErr.textContent = msg;
+                resultError.style.display = 'block';
+                resultSuccess.style.display = 'none';
+                resultArea.style.display = 'block';
+
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            /**
+             * Hides all result panels and resets state.
+             */
+            function hideResult () {
+                resultArea.style.display = 'none';
+                resultSuccess.style.display = 'none';
+                resultError.style.display = 'none';
+                resultMsgOk.textContent = '';
+                resultMsgErr.textContent = '';
+                linkSt.style.display = 'none';
+                linkGd.style.display = 'none';
+                linkSt.href = '#';
+                linkGd.href = '#';
+            }
+
+            /**
+             * Enables or disables the loading state.
+             * Shows a spinner overlay over the form and disables the submit button.
+             *
+             * @param {boolean} loading
+             */
+            function setLoading (loading) {
+                if (loading) {
+                    formWrapper.classList.add('is-loading');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Checking…';
+                } else {
+                    formWrapper.classList.remove('is-loading');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Check for Update';
+                }
+            }
+
+        })();
+    </script>
+{% endblock %}

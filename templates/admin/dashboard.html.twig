@@ -1,0 +1,143 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block main %}
+    <div class="container-fluid px-0">
+
+        {# ------------------------------------------------------------------ #}
+        {# Warning banner                                                     #}
+        {# ------------------------------------------------------------------ #}
+        <div class="alert alert-warning d-flex align-items-start gap-3 mb-4" role="alert">
+            <span style="font-size: 1.5rem;">⚠️</span>
+            <div>
+                <strong>Important:</strong>
+                Changes you make here directly affect which firmware files customers receive.
+                Wrong firmware can <strong>damage devices</strong>.
+                Please review your changes carefully before saving, and always verify
+                that version strings are copied exactly from the device screen.
+            </div>
+        </div>
+
+        {# ------------------------------------------------------------------ #}
+        {# Stats overview                                                     #}
+        {# ------------------------------------------------------------------ #}
+        <h5 class="mb-3 text-muted fw-semibold">Current Database Summary</h5>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div style="font-size: 2rem; font-weight: 700; color: #1a1a2e;">
+                            {{ stats.total }}
+                        </div>
+                        <div class="text-muted small mt-1">Total Records</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div style="font-size: 2rem; font-weight: 700; color: #2196f3;">
+                            {{ stats.standard }}
+                        </div>
+                        <div class="text-muted small mt-1">Standard Device Records</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div style="font-size: 2rem; font-weight: 700; color: #9c27b0;">
+                            {{ stats.lci }}
+                        </div>
+                        <div class="text-muted small mt-1">LCI Device Records</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="card text-center h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div style="font-size: 2rem; font-weight: 700; color: #4caf50;">
+                            {{ stats.latest }}
+                        </div>
+                        <div class="text-muted small mt-1">
+                            "Latest" Entries
+                            <div class="text-muted" style="font-size: 0.75rem;">(should be 12)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ------------------------------------------------------------------ #}
+        {# Latest count health check                                          #}
+        {# ------------------------------------------------------------------ #}
+        {% if stats.latest != 12 %}
+            <div class="alert alert-danger" role="alert">
+                ⚠️ <strong>Warning:</strong>
+                There are currently <strong>{{ stats.latest }}</strong> entries marked as "Latest",
+                but there should be <strong>12</strong> (one per product line).
+                Please review the
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\SoftwareVersionCrudController').generateUrl() }}">
+                    firmware version list
+                </a>
+                and correct this before any new versions are released.
+            </div>
+        {% else %}
+            <div class="alert alert-success" role="alert">
+                ✅ All 12 product lines have exactly one "Latest" entry. No issues detected.
+            </div>
+        {% endif %}
+
+        {# ------------------------------------------------------------------ #}
+        {# Quick actions                                                      #}
+        {# ------------------------------------------------------------------ #}
+        <h5 class="mt-4 mb-3 text-muted fw-semibold">Quick Actions</h5>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a
+                    href="{{ ea_url().setController('App\\Controller\\Admin\\SoftwareVersionCrudController').generateUrl() }}"
+                    class="btn btn-outline-dark"
+            >
+                📦 View all firmware versions
+            </a>
+            <a
+                    href="{{ ea_url().setController('App\\Controller\\Admin\\SoftwareVersionCrudController').setAction('new').generateUrl() }}"
+                    class="btn btn-dark"
+            >
+                ➕ Add new firmware version
+            </a>
+        </div>
+
+        {# ------------------------------------------------------------------ #}
+        {# How-to summary                                                     #}
+        {# ------------------------------------------------------------------ #}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-light fw-semibold">
+                📖 How to release a new firmware version
+            </div>
+            <div class="card-body">
+                <ol class="mb-0" style="line-height: 2;">
+                    <li>
+                        Go to <strong>All Versions</strong> and find the current latest entry
+                        for the product line you are updating.
+                    </li>
+                    <li>
+                        Edit that entry and <strong>uncheck "Is Latest"</strong>. Save.
+                    </li>
+                    <li>
+                        Click <strong>Add New Version</strong>. Fill in all fields carefully,
+                        matching the product name exactly. Check "Is Latest" on the new entry.
+                    </li>
+                    <li>
+                        Return to the Dashboard and confirm the "Latest" count is still <strong>12</strong>.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+{% endblock %}
